@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.2">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1760</x>
+      <y>320</y>
+      <w>220</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;azurerm_virtual_machine&gt;&gt;
+name=ubuntu
+image=ubuntu 18.04
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1040</x>
+      <y>320</y>
+      <w>420</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;azurerm_virtual_network_gateway&gt;&gt;
+name=gateway
+vpn_client_configuration.address_space=172.31.0.0/16</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1000</x>
+      <y>130</y>
+      <w>1020</w>
+      <h>290</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;azurerm_virtual_network&gt;&gt;
+name=example
+address_space=10.101.0.0/16
+lt=..
+layer=-1</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1500</x>
+      <y>230</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;azurerm_subnet&gt;&gt;
+name=backend
+address_prefix=10.101.2.0/24
+lt=..</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>0</x>
+      <y>270</y>
+      <w>570</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;on-prem vm&gt;&gt;
+ip_address=(e.g.)172.31.128.2
+route 10.101.0.0/16 (azurerm_virtual_network) metric=43
+route 10.101.255.255/32 (azurerm_virtual_network) metric=281
+route 172.31.0.0/16 (azurerm_virtual_network_gateway) metric=43
+route 172.31.128.2/32 (azurerm_virtual_network_gateway) metric=281
+route 172.31.255.255/32 (azurerm_virtual_network_gateway) metric=281
+route 224.0.0.0/12 (azurerm_virtual_network_gateway) metric=281
+route 255.255.255.255/32 (azurerm_virtual_network_gateway) metric=281
+
+
+  Network Destination        Netmask          Gateway       Interface  Metric
+          0.0.0.0          0.0.0.0    192.168.121.1  192.168.121.224     15
+       10.101.0.0      255.255.0.0         On-link      172.31.128.2     43
+   10.101.255.255  255.255.255.255         On-link      172.31.128.2    281
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1020</x>
+      <y>230</y>
+      <w>460</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;azurerm_subnet&gt;&gt;
+name=GatewaySubnet
+address_prefix=10.101.1.0/24
+lt=..</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>770</x>
+      <y>50</y>
+      <w>1270</w>
+      <h>390</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;azurerm_resource_group&gt;&gt;
+name=rgl-vpn-gateway-example
+lt=..
+
+layer=-1</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>790</x>
+      <y>320</y>
+      <w>190</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;azurerm_public_ip&gt;&gt;
+name=gateway
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>970</x>
+      <y>340</y>
+      <w>90</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>10.0;10.0;70.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>560</x>
+      <y>330</y>
+      <w>250</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-
+&lt;&lt;P2S (IKEv2/IPSec)&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;20.0;230.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1520</x>
+      <y>320</y>
+      <w>220</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;azurerm_network_interface&gt;&gt;
+name=ubuntu</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1730</x>
+      <y>340</y>
+      <w>50</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>10.0;10.0;30.0;10.0</additional_attributes>
+  </element>
+</diagram>
