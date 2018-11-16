@@ -41,6 +41,10 @@ output "ubuntu_ip_address" {
   value = "${azurerm_network_interface.ubuntu.private_ip_address}"
 }
 
+output "windows_ip_address" {
+  value = "${azurerm_network_interface.windows.private_ip_address}"
+}
+
 provider "azurerm" {}
 
 resource "azurerm_resource_group" "example" {
@@ -176,5 +180,71 @@ resource "azurerm_virtual_machine" "ubuntu" {
       path     = "/home/${var.admin_username}/.ssh/authorized_keys"
       key_data = "${var.admin_ssh_key_data}"
     }
+  }
+}
+
+resource "azurerm_network_interface" "windows" {
+  name                = "windows"
+  resource_group_name = "${azurerm_resource_group.example.name}"
+  location            = "${azurerm_resource_group.example.location}"
+
+  ip_configuration {
+    name                          = "windows"
+    subnet_id                     = "${azurerm_subnet.backend.id}"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.101.2.5" # NB Azure reserves the first four addresses in each subnet address range, so do not use those.
+  }
+}
+
+# TODO enable boot diagnostics to be able to use the serial console.
+resource "azurerm_virtual_machine" "windows" {
+  name                  = "windows"
+  resource_group_name   = "${azurerm_resource_group.example.name}"
+  location              = "${azurerm_resource_group.example.location}"
+  network_interface_ids = ["${azurerm_network_interface.windows.id}"]
+  vm_size               = "Standard_DS1_v2"
+
+  delete_os_disk_on_termination    = true
+  delete_data_disks_on_termination = true
+
+  storage_os_disk {
+    name          = "windows_os"
+    caching       = "ReadWrite" # TODO is this advisable?
+    create_option = "FromImage"
+
+    #disk_size_gb      = "60" # this is optional. # TODO change this?
+    managed_disk_type = "StandardSSD_LRS" # Locally Redundant Storage.
+  }
+
+  # see https://docs.microsoft.com/en-us/azure/virtual-machines/windows/cli-ps-findimage
+  storage_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2016-Datacenter"
+    version   = "latest"
+  }
+
+  # NB this disk will not be initialized.
+  #    so, you must format it yourself.
+  # TODO add a provision step to initialize the disk.
+  storage_data_disk {
+    name              = "windows_data"
+    caching           = "ReadWrite"       # TODO is this advisable?
+    create_option     = "Empty"
+    disk_size_gb      = "10"
+    lun               = 0
+    managed_disk_type = "StandardSSD_LRS"
+  }
+
+  os_profile {
+    computer_name  = "windows"
+    admin_username = "${var.admin_username}"
+    admin_password = "${var.admin_password}"
+  }
+
+  os_profile_windows_config {
+    provision_vm_agent = false
+    enable_automatic_upgrades = false
+    timezone = "GMT Standard Time"
   }
 }
