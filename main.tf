@@ -118,7 +118,8 @@ resource "azurerm_network_interface" "ubuntu" {
   ip_configuration {
     name                          = "ubuntu"
     subnet_id                     = "${azurerm_subnet.backend.id}"
-    private_ip_address_allocation = "dynamic"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.101.2.4" # NB Azure reserves the first four addresses in each subnet address range, so do not use those.
   }
 }
 
