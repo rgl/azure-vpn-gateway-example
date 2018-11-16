@@ -105,7 +105,7 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 
   vpn_client_configuration {
     address_space        = ["172.31.0.0/16"]
-    vpn_client_protocols = ["SSTP", "Ikev2"] # NB IKEv2 is not supported by the Basic sku gateway.
+    vpn_client_protocols = ["SSTP", "IkeV2"] # NB IKEv2 is not supported by the Basic sku gateway.
 
     root_certificate {
       name             = "example-ca"
