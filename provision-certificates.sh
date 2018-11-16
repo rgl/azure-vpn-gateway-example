@@ -37,38 +37,43 @@ if [ ! -f $ca_file_name-crt.pem ]; then
     #openssl x509 -noout -text -in $ca_file_name-crt.pem
 fi
 
-# create the ubuntu-ubuntu-client client certificate to authenticate into the vpn.
-common_name='ubuntu-vpn-client'
-if [ ! -f $common_name-crt.pem ]; then
-    openssl genrsa \
-        -out $common_name-key.pem \
-        2048 \
-        2>/dev/null
-    chmod 400 $common_name-key.pem
-    openssl req -new \
-        -sha256 \
-        -subj "/CN=$common_name" \
-        -key $common_name-key.pem \
-        -out $common_name-csr.pem
-    openssl x509 -req -sha256 \
-        -CA $ca_file_name-crt.pem \
-        -CAkey $ca_file_name-key.pem \
-        -CAcreateserial \
-        -extensions a \
-        -extfile <(echo "[a]
-            extendedKeyUsage=critical,clientAuth
-            ") \
-        -days 365 \
-        -in  $common_name-csr.pem \
-        -out $common_name-crt.pem
-    openssl pkcs12 -export \
-        -keyex \
-        -inkey $common_name-key.pem \
-        -in $common_name-crt.pem \
-        -certfile $common_name-crt.pem \
-        -passout pass: \
-        -out $common_name-key.p12
-    # dump the certificate contents (for logging purposes).
-    #openssl x509 -noout -text -in $common_name-crt.pem
-    #openssl pkcs12 -info -nodes -passin pass: -in $common_name-key.p12
-fi
+# create the client certificates to authenticate into the vpn.
+vpn_client_common_names=(
+    'windows-p2s-vpn-client'
+    'ubuntu-p2s-vpn-client'
+)
+for common_name in "${vpn_client_common_names[@]}"; do
+    if [ ! -f $common_name-crt.pem ]; then
+        openssl genrsa \
+            -out $common_name-key.pem \
+            2048 \
+            2>/dev/null
+        chmod 400 $common_name-key.pem
+        openssl req -new \
+            -sha256 \
+            -subj "/CN=$common_name" \
+            -key $common_name-key.pem \
+            -out $common_name-csr.pem
+        openssl x509 -req -sha256 \
+            -CA $ca_file_name-crt.pem \
+            -CAkey $ca_file_name-key.pem \
+            -CAcreateserial \
+            -extensions a \
+            -extfile <(echo "[a]
+                extendedKeyUsage=critical,clientAuth
+                ") \
+            -days 365 \
+            -in  $common_name-csr.pem \
+            -out $common_name-crt.pem
+        openssl pkcs12 -export \
+            -keyex \
+            -inkey $common_name-key.pem \
+            -in $common_name-crt.pem \
+            -certfile $common_name-crt.pem \
+            -passout pass: \
+            -out $common_name-key.p12
+        # dump the certificate contents (for logging purposes).
+        #openssl x509 -noout -text -in $common_name-crt.pem
+        #openssl pkcs12 -info -nodes -passin pass: -in $common_name-key.p12
+    fi
+done

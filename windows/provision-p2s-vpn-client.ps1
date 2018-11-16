@@ -6,7 +6,7 @@ Import-Certificate `
 
 Write-Host 'Importing the example VPN client certificate...'
 Import-PfxCertificate `
-    -FilePath 'c:\vagrant\shared\example-ca\ubuntu-vpn-client-key.p12' `
+    -FilePath 'c:\vagrant\shared\example-ca\windows-p2s-vpn-client-key.p12' `
     -CertStoreLocation Cert:\CurrentUser\My `
     -Password $null `
     -Exportable `
