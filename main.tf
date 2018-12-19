@@ -10,10 +10,6 @@ variable "resource_group_name" {
   default = "rgl-vpn-gateway-example"
 }
 
-variable "gateway_dns_name" {
-  default = "rgl-vpn-gateway-example"
-}
-
 variable "tags" {
   type = "map"
 
@@ -103,7 +99,6 @@ resource "azurerm_public_ip" "gateway" {
   resource_group_name          = "${azurerm_resource_group.example.name}"
   location                     = "${azurerm_resource_group.example.location}"
   public_ip_address_allocation = "Dynamic"
-  domain_name_label            = "${var.gateway_dns_name}"                    # TODO why this name always resolves to 255.255.255.255?
 }
 
 resource "azurerm_virtual_network_gateway" "gateway" {
