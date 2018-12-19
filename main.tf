@@ -53,6 +53,27 @@ resource "azurerm_resource_group" "example" {
   tags     = "${var.tags}"
 }
 
+# NB this generates a single random number for the resource group.
+resource "random_id" "example" {
+  keepers = {
+    resource_group = "${azurerm_resource_group.example.name}"
+  }
+
+  byte_length = 10
+}
+
+resource "azurerm_storage_account" "diagnostics" {
+  # NB this name must be globally unique as all the azure storage accounts share the same namespace.
+  # NB this name must be at most 24 characters long.
+  name = "diag${random_id.example.hex}"
+
+  resource_group_name      = "${azurerm_resource_group.example.name}"
+  location                 = "${azurerm_resource_group.example.location}"
+  account_kind             = "StorageV2"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
 resource "azurerm_virtual_network" "example" {
   name                = "example"
   address_space       = ["10.101.0.0/16"]
@@ -127,7 +148,6 @@ resource "azurerm_network_interface" "ubuntu" {
   }
 }
 
-# TODO enable boot diagnostics to be able to use the serial console.
 resource "azurerm_virtual_machine" "ubuntu" {
   name                  = "ubuntu"
   resource_group_name   = "${azurerm_resource_group.example.name}"
@@ -181,6 +201,11 @@ resource "azurerm_virtual_machine" "ubuntu" {
       key_data = "${var.admin_ssh_key_data}"
     }
   }
+
+  boot_diagnostics {
+    enabled     = true
+    storage_uri = "${azurerm_storage_account.diagnostics.primary_blob_endpoint}"
+  }
 }
 
 resource "azurerm_network_interface" "windows" {
@@ -196,7 +221,6 @@ resource "azurerm_network_interface" "windows" {
   }
 }
 
-# TODO enable boot diagnostics to be able to use the serial console.
 resource "azurerm_virtual_machine" "windows" {
   name                  = "windows"
   resource_group_name   = "${azurerm_resource_group.example.name}"
@@ -246,5 +270,9 @@ resource "azurerm_virtual_machine" "windows" {
     provision_vm_agent = false
     enable_automatic_upgrades = false
     timezone = "GMT Standard Time"
+
+  boot_diagnostics {
+    enabled     = true
+    storage_uri = "${azurerm_storage_account.diagnostics.primary_blob_endpoint}"
   }
 }
