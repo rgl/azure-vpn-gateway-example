@@ -265,6 +265,7 @@ resource "azurerm_virtual_machine" "windows" {
     provision_vm_agent = false
     enable_automatic_upgrades = false
     timezone = "GMT Standard Time"
+  }
 
   boot_diagnostics {
     enabled     = true
