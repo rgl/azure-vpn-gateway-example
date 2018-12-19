@@ -29,6 +29,16 @@ variable "admin_password" {
 # NB when you run make terraform-apply this is set from the TF_VAR_admin_ssh_key_data environment variable, which comes from the ~/.ssh/id_rsa.pub file.
 variable "admin_ssh_key_data" {}
 
+# NB you can change this with the TF_VAR_home_gateway_shared_key environment variable.
+# NB use at least a 128-bit (16-bytes) key, e.g., generate one with: openssl rand -hex 16
+variable "home_gateway_shared_key" {
+  default = "1cb70637b2cd1ca8959fc0668ef6fb55"
+}
+
+variable "home_gateway_public_address" {
+  default = "1.1.1.1" # NB you need to change this to your actual home gateway/vpn-device public address.
+}
+
 output "gateway_ip_address" {
   value = "${azurerm_public_ip.gateway.ip_address}"
 }
@@ -127,6 +137,41 @@ resource "azurerm_virtual_network_gateway" "gateway" {
       name             = "example-ca"
       public_cert_data = "${base64encode(file("shared/example-ca/example-ca-crt.der"))}"
     }
+  }
+}
+
+resource "azurerm_local_network_gateway" "home" {
+  name                = "home"
+  resource_group_name = "${azurerm_resource_group.example.name}"
+  location            = "${azurerm_resource_group.example.location}"
+  gateway_address     = "${var.home_gateway_public_address}"
+  address_space       = ["192.168.0.0/16"]
+}
+
+resource "azurerm_virtual_network_gateway_connection" "home" {
+  name                = "home"
+  location            = "${azurerm_resource_group.example.location}"
+  resource_group_name = "${azurerm_resource_group.example.name}"
+
+  type                       = "IPsec"
+  virtual_network_gateway_id = "${azurerm_virtual_network_gateway.gateway.id}"
+  local_network_gateway_id   = "${azurerm_local_network_gateway.home.id}"
+
+  shared_key = "${var.home_gateway_shared_key}"
+
+  # NB there is no way to change the ike sa lifetime from its fixed value of 28800 seconds.
+  # see https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-devices#ipsec
+  # see https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-ipsecikepolicy-rm-powershell
+  # see https://www.terraform.io/docs/providers/azurerm/r/virtual_network_gateway_connection.html
+  ipsec_policy {
+    dh_group         = "DHGroup2048"
+    ike_encryption   = "AES128"
+    ike_integrity    = "SHA256"
+    ipsec_encryption = "AES128"
+    ipsec_integrity  = "SHA256"
+    pfs_group        = "PFS2048"
+    sa_datasize      = 104857600  # [KB] (104857600KB = 100GB)
+    sa_lifetime      = 27000      # [Seconds] (27000s = 7.5h)
   }
 }
 

@@ -101,3 +101,5 @@ putty "rgl@$(Get-Content -Raw C:\vagrant\shared\ubuntu_ip_address.txt)"
 * https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-vpn-faq
 * https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-point-to-site-routing
 * https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-site-to-site-resource-manager-cli
+* https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-devices#ipsec
+* https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-ipsecikepolicy-rm-powershell
