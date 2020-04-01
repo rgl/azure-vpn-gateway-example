@@ -1,3 +1,14 @@
+# see https://github.com/hashicorp/terraform
+terraform {
+  required_version = ">= 0.12"
+}
+
+# see https://github.com/terraform-providers/terraform-provider-azurerm
+provider "azurerm" {
+  version = "~> 2.3"
+  features {}
+}
+
 # NB you can test the relative speed from you browser to a location using https://azurespeedtest.azurewebsites.net/
 # get the available locations with: az account list-locations --output table
 variable "location" {
@@ -11,7 +22,7 @@ variable "resource_group_name" {
 }
 
 variable "tags" {
-  type = "map"
+  type = map
 
   default = {
     owner = "rgl"
@@ -40,29 +51,27 @@ variable "home_gateway_public_address" {
 }
 
 output "gateway_ip_address" {
-  value = "${azurerm_public_ip.gateway.ip_address}"
+  value = azurerm_public_ip.gateway.ip_address
 }
 
 output "ubuntu_ip_address" {
-  value = "${azurerm_network_interface.ubuntu.private_ip_address}"
+  value = azurerm_network_interface.ubuntu.private_ip_address
 }
 
 output "windows_ip_address" {
-  value = "${azurerm_network_interface.windows.private_ip_address}"
+  value = azurerm_network_interface.windows.private_ip_address
 }
 
-provider "azurerm" {}
-
 resource "azurerm_resource_group" "example" {
-  name     = "${var.resource_group_name}" # NB this name must be unique within the Azure subscription.
-  location = "${var.location}"
-  tags     = "${var.tags}"
+  name     = var.resource_group_name # NB this name must be unique within the Azure subscription.
+  location = var.location
+  tags     = var.tags
 }
 
 # NB this generates a single random number for the resource group.
 resource "random_id" "example" {
   keepers = {
-    resource_group = "${azurerm_resource_group.example.name}"
+    resource_group = azurerm_resource_group.example.name
   }
 
   byte_length = 10
@@ -73,8 +82,8 @@ resource "azurerm_storage_account" "diagnostics" {
   # NB this name must be at most 24 characters long.
   name = "diag${random_id.example.hex}"
 
-  resource_group_name      = "${azurerm_resource_group.example.name}"
-  location                 = "${azurerm_resource_group.example.location}"
+  resource_group_name      = azurerm_resource_group.example.name
+  location                 = azurerm_resource_group.example.location
   account_kind             = "StorageV2"
   account_tier             = "Standard"
   account_replication_type = "LRS"
@@ -83,21 +92,21 @@ resource "azurerm_storage_account" "diagnostics" {
 resource "azurerm_virtual_network" "example" {
   name                = "example"
   address_space       = ["10.101.0.0/16"]
-  location            = "${azurerm_resource_group.example.location}"
-  resource_group_name = "${azurerm_resource_group.example.name}"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
 }
 
 resource "azurerm_subnet" "gateway" {
   name                 = "GatewaySubnet"                           # NB you MUST use this name. See the VPN Gateway FAQ.
-  resource_group_name  = "${azurerm_resource_group.example.name}"
-  virtual_network_name = "${azurerm_virtual_network.example.name}"
+  resource_group_name  = azurerm_resource_group.example.name
+  virtual_network_name = azurerm_virtual_network.example.name
   address_prefix       = "10.101.1.0/24"
 }
 
 resource "azurerm_subnet" "backend" {
   name                 = "backend"
-  resource_group_name  = "${azurerm_resource_group.example.name}"
-  virtual_network_name = "${azurerm_virtual_network.example.name}"
+  resource_group_name  = azurerm_resource_group.example.name
+  virtual_network_name = azurerm_virtual_network.example.name
   address_prefix       = "10.101.2.0/24"
 }
 
@@ -105,16 +114,16 @@ resource "azurerm_subnet" "backend" {
 #    it always resolves to 255.255.255.255. instead, the gateway address
 #    is obtained with make show-vpn-client-configuration.
 resource "azurerm_public_ip" "gateway" {
-  name                         = "gateway"
-  resource_group_name          = "${azurerm_resource_group.example.name}"
-  location                     = "${azurerm_resource_group.example.location}"
-  public_ip_address_allocation = "Dynamic"
+  name                = "gateway"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  allocation_method   = "Dynamic"
 }
 
 resource "azurerm_virtual_network_gateway" "gateway" {
   name                = "gateway"
-  location            = "${azurerm_resource_group.example.location}"
-  resource_group_name = "${azurerm_resource_group.example.name}"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
 
   type          = "Vpn"
   vpn_type      = "RouteBased"
@@ -124,9 +133,9 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 
   ip_configuration {
     name                          = "vnetGatewayConfig"
-    public_ip_address_id          = "${azurerm_public_ip.gateway.id}"
+    public_ip_address_id          = azurerm_public_ip.gateway.id
     private_ip_address_allocation = "Dynamic"
-    subnet_id                     = "${azurerm_subnet.gateway.id}"
+    subnet_id                     = azurerm_subnet.gateway.id
   }
 
   vpn_client_configuration {
@@ -135,29 +144,29 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 
     root_certificate {
       name             = "example-ca"
-      public_cert_data = "${base64encode(file("shared/example-ca/example-ca-crt.der"))}"
+      public_cert_data = filebase64("shared/example-ca/example-ca-crt.der")
     }
   }
 }
 
 resource "azurerm_local_network_gateway" "home" {
   name                = "home"
-  resource_group_name = "${azurerm_resource_group.example.name}"
-  location            = "${azurerm_resource_group.example.location}"
-  gateway_address     = "${var.home_gateway_public_address}"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  gateway_address     = var.home_gateway_public_address
   address_space       = ["192.168.0.0/16"]
 }
 
 resource "azurerm_virtual_network_gateway_connection" "home" {
   name                = "home"
-  location            = "${azurerm_resource_group.example.location}"
-  resource_group_name = "${azurerm_resource_group.example.name}"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
 
   type                       = "IPsec"
-  virtual_network_gateway_id = "${azurerm_virtual_network_gateway.gateway.id}"
-  local_network_gateway_id   = "${azurerm_local_network_gateway.home.id}"
+  virtual_network_gateway_id = azurerm_virtual_network_gateway.gateway.id
+  local_network_gateway_id   = azurerm_local_network_gateway.home.id
 
-  shared_key = "${var.home_gateway_shared_key}"
+  shared_key = var.home_gateway_shared_key
 
   # NB there is no way to change the ike sa lifetime from its fixed value of 28800 seconds.
   # see https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-devices#ipsec
@@ -177,12 +186,12 @@ resource "azurerm_virtual_network_gateway_connection" "home" {
 
 resource "azurerm_network_interface" "ubuntu" {
   name                = "ubuntu"
-  resource_group_name = "${azurerm_resource_group.example.name}"
-  location            = "${azurerm_resource_group.example.location}"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
 
   ip_configuration {
     name                          = "ubuntu"
-    subnet_id                     = "${azurerm_subnet.backend.id}"
+    subnet_id                     = azurerm_subnet.backend.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.101.2.4" # NB Azure reserves the first four addresses in each subnet address range, so do not use those.
   }
@@ -190,9 +199,9 @@ resource "azurerm_network_interface" "ubuntu" {
 
 resource "azurerm_virtual_machine" "ubuntu" {
   name                  = "ubuntu"
-  resource_group_name   = "${azurerm_resource_group.example.name}"
-  location              = "${azurerm_resource_group.example.location}"
-  network_interface_ids = ["${azurerm_network_interface.ubuntu.id}"]
+  resource_group_name   = azurerm_resource_group.example.name
+  location              = azurerm_resource_group.example.location
+  network_interface_ids = [azurerm_network_interface.ubuntu.id]
   vm_size               = "Standard_DS1_v2"
 
   delete_os_disk_on_termination    = true
@@ -229,8 +238,8 @@ resource "azurerm_virtual_machine" "ubuntu" {
 
   os_profile {
     computer_name  = "ubuntu"
-    admin_username = "${var.admin_username}"
-    admin_password = "${var.admin_password}"
+    admin_username = var.admin_username
+    admin_password = var.admin_password
   }
 
   os_profile_linux_config {
@@ -238,24 +247,24 @@ resource "azurerm_virtual_machine" "ubuntu" {
 
     ssh_keys {
       path     = "/home/${var.admin_username}/.ssh/authorized_keys"
-      key_data = "${var.admin_ssh_key_data}"
+      key_data = var.admin_ssh_key_data
     }
   }
 
   boot_diagnostics {
     enabled     = true
-    storage_uri = "${azurerm_storage_account.diagnostics.primary_blob_endpoint}"
+    storage_uri = azurerm_storage_account.diagnostics.primary_blob_endpoint
   }
 }
 
 resource "azurerm_network_interface" "windows" {
   name                = "windows"
-  resource_group_name = "${azurerm_resource_group.example.name}"
-  location            = "${azurerm_resource_group.example.location}"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
 
   ip_configuration {
     name                          = "windows"
-    subnet_id                     = "${azurerm_subnet.backend.id}"
+    subnet_id                     = azurerm_subnet.backend.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.101.2.5" # NB Azure reserves the first four addresses in each subnet address range, so do not use those.
   }
@@ -263,9 +272,9 @@ resource "azurerm_network_interface" "windows" {
 
 resource "azurerm_virtual_machine" "windows" {
   name                  = "windows"
-  resource_group_name   = "${azurerm_resource_group.example.name}"
-  location              = "${azurerm_resource_group.example.location}"
-  network_interface_ids = ["${azurerm_network_interface.windows.id}"]
+  resource_group_name   = azurerm_resource_group.example.name
+  location              = azurerm_resource_group.example.location
+  network_interface_ids = [azurerm_network_interface.windows.id]
   vm_size               = "Standard_DS1_v2"
 
   delete_os_disk_on_termination    = true
@@ -302,8 +311,8 @@ resource "azurerm_virtual_machine" "windows" {
 
   os_profile {
     computer_name  = "windows"
-    admin_username = "${var.admin_username}"
-    admin_password = "${var.admin_password}"
+    admin_username = var.admin_username
+    admin_password = var.admin_password
   }
 
   os_profile_windows_config {
@@ -314,6 +323,6 @@ resource "azurerm_virtual_machine" "windows" {
 
   boot_diagnostics {
     enabled     = true
-    storage_uri = "${azurerm_storage_account.diagnostics.primary_blob_endpoint}"
+    storage_uri = azurerm_storage_account.diagnostics.primary_blob_endpoint
   }
 }

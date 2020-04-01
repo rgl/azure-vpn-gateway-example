@@ -2,14 +2,16 @@ all: architecture.png terraform-apply
 
 terraform-init: shared/example-ca/example-ca-crt.der
 	CHECKPOINT_DISABLE=1 \
-	TF_LOG=DEBUG \
+	TF_LOG=TRACE \
 	TF_LOG_PATH=terraform.log \
 	terraform init
+	CHECKPOINT_DISABLE=1 \
+	terraform -v
 
 terraform-apply: shared/example-ca/example-ca-crt.der
 	rm -f shared/vpn-client.zip
 	CHECKPOINT_DISABLE=1 \
-	TF_LOG=DEBUG \
+	TF_LOG=TRACE \
 	TF_LOG_PATH=terraform.log \
 	TF_VAR_admin_ssh_key_data="$(shell cat ~/.ssh/id_rsa.pub)" \
 	time terraform apply
@@ -18,30 +20,30 @@ terraform-apply: shared/example-ca/example-ca-crt.der
 
 terraform-destroy: shared/example-ca/example-ca-crt.der
 	CHECKPOINT_DISABLE=1 \
-	TF_LOG=DEBUG \
+	TF_LOG=TRACE \
 	TF_LOG_PATH=terraform.log \
 	TF_VAR_admin_ssh_key_data="$(shell cat ~/.ssh/id_rsa.pub)" \
 	time terraform destroy
 
 terraform-destroy-gateway: shared/example-ca/example-ca-crt.der
 	CHECKPOINT_DISABLE=1 \
-	TF_LOG=DEBUG \
+	TF_LOG=TRACE \
 	TF_LOG_PATH=terraform.log \
 	TF_VAR_admin_ssh_key_data="$(shell cat ~/.ssh/id_rsa.pub)" \
 	time terraform destroy -target azurerm_virtual_network_gateway.example
 
 terraform-destroy-ubuntu: shared/example-ca/example-ca-crt.der
 	CHECKPOINT_DISABLE=1 \
-	TF_LOG=DEBUG \
+	TF_LOG=TRACE \
 	TF_LOG_PATH=terraform.log \
 	TF_VAR_admin_ssh_key_data="$(shell cat ~/.ssh/id_rsa.pub)" \
 	time terraform destroy -target azurerm_virtual_machine.ubuntu
 
 show-p2s-vpn-client-configuration: shared/vpn-client.zip
 	@unzip -l shared/vpn-client.zip
-	@echo "VPN Server: $$(unzip -p shared/vpn-client.zip Generic/VpnSettings.xml | xmlstarlet sel -t -v /VpnProfile/VpnServer)"
-	@echo "VPN Server CA $$(unzip -p shared/vpn-client.zip Generic/VpnSettings.xml | xmlstarlet sel -t -v /VpnProfile/CaCert | base64 --decode | openssl x509 -noout -text -inform der)"
-	@#echo "VPN Server Root $$(unzip -p shared/vpn-client.zip Generic/VpnServerRoot.cer | openssl x509 -noout -text -inform der)"
+	@echo "VPN Server: $$(unzip -p shared/vpn-client.zip '*VpnSettings.xml' | xmlstarlet sel -t -v /VpnProfile/VpnServer)"
+	@echo "VPN Server CA $$(unzip -p shared/vpn-client.zip '*VpnSettings.xml' | xmlstarlet sel -t -v /VpnProfile/CaCert | base64 --decode | openssl x509 -noout -text -inform der)"
+	@#echo "VPN Server Root $$(unzip -p shared/vpn-client.zip '*VpnServerRoot.cer' | openssl x509 -noout -text -inform der)"
 
 shared/vpn-client.zip:
 	./provision-vpn-client.sh
