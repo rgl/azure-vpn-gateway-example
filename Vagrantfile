@@ -19,6 +19,13 @@ Vagrant.configure('2') do |config|
     vb.customize ["modifyvm", :id, "--clipboard-mode", "bidirectional"]
   end
 
+  config.vm.define 'builder' do |config|
+    config.vm.box = 'ubuntu-18.04-amd64'
+    config.vm.hostname = 'builder.test'
+    config.vm.provision :shell, path: 'provision-base.sh'
+    config.vm.provision :shell, path: 'provision-tools.sh'
+  end
+
   config.vm.define 'windows-p2s-vpn-client' do |config|
     config.vm.provider :libvirt do |lv, config|
       config.vm.synced_folder '.', '/vagrant', type: 'smb', smb_username: ENV['USER'], smb_password: ENV['VAGRANT_SMB_PASSWORD']

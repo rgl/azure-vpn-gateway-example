@@ -8,7 +8,7 @@ terraform-init: shared/example-ca/example-ca-crt.der
 	CHECKPOINT_DISABLE=1 \
 	terraform -v
 
-terraform-apply: shared/example-ca/example-ca-crt.der
+terraform-apply: shared/example-ca/example-ca-crt.der ~/.ssh/id_rsa
 	rm -f shared/vpn-client.zip
 	CHECKPOINT_DISABLE=1 \
 	TF_LOG=TRACE \
@@ -50,6 +50,9 @@ shared/vpn-client.zip:
 
 shared/example-ca/example-ca-crt.der:
 	./provision-certificates.sh
+
+~/.ssh/id_rsa:
+	ssh-keygen -f $@ -t rsa -b 2048 -C "$$USER@$$(hostname --fqdn)" -N ''
 
 architecture.png: architecture.uxf
 	java -jar ~/Applications/Umlet/umlet.jar \

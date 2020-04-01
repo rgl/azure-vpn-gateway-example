@@ -3,12 +3,17 @@ an example azure vpn gateway
 ![](architecture.png)
 
 
-# Usage (on a Ubuntu Desktop)
+# Usage (on a Ubuntu Desktop or builder environment)
 
-Install the tools:
+Install the tools (or launch and enter the builder environment):
 
 ```bash
+# install the tools.
 ./provision-tools.sh
+# OR launch the builder environment and use the tools inside it.
+time vagrant up builder
+vagrant ssh
+cd /vagrant
 ```
 
 Login into azure-cli:
@@ -22,6 +27,7 @@ List the subscriptions and select the current one if the default is not OK:
 ```bash
 az account list
 az account set --subscription=<id>
+az account show
 ```
 
 Review `main.tf` and maybe change the `location` variable.
@@ -64,7 +70,7 @@ VPN Server CA Certificate:
 ...
 ```
 
-Build and install the [base Windows box](https://github.com/rgl/windows-2016-vagrant).
+In your host, build and install the [base Windows box](https://github.com/rgl/windows-2016-vagrant).
 
 Start a local test VM:
 
