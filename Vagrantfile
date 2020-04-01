@@ -16,17 +16,16 @@ Vagrant.configure('2') do |config|
     vb.linked_clone = true
     vb.memory = 2048
     vb.cpus = 2
+    vb.customize ["modifyvm", :id, "--clipboard-mode", "bidirectional"]
   end
 
   config.vm.define 'windows-p2s-vpn-client' do |config|
     config.vm.provider :libvirt do |lv, config|
       config.vm.synced_folder '.', '/vagrant', type: 'smb', smb_username: ENV['USER'], smb_password: ENV['VAGRANT_SMB_PASSWORD']
     end
-    config.vm.provider :virtualbox do |vb|
-    end
-    config.vm.box = 'windows-2016-amd64'
+    config.vm.box = 'windows-2019-amd64'
     config.vm.hostname = 'windows-vpn-client'
-    config.vm.provision :shell, inline: "$env:chocolateyVersion='0.10.11'; iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex", name: "Install Chocolatey"
+    config.vm.provision :shell, inline: "$env:chocolateyVersion='0.10.15'; iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex", name: "Install Chocolatey"
     config.vm.provision :shell, path: 'windows/ps.ps1', args: 'provision-base.ps1'
     config.vm.provision :shell, path: 'windows/ps.ps1', args: 'provision-p2s-vpn-client.ps1'
   end
