@@ -16,6 +16,7 @@ terraform-apply: shared/example-ca/example-ca-crt.der ~/.ssh/id_rsa
 	TF_VAR_admin_ssh_key_data="$(shell cat ~/.ssh/id_rsa.pub)" \
 	time terraform apply
 	terraform output ubuntu_ip_address >shared/ubuntu_ip_address.txt
+	terraform output windows_ip_address >shared/windows_ip_address.txt
 	$(MAKE) shared/vpn-client.zip
 
 terraform-destroy: shared/example-ca/example-ca-crt.der

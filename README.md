@@ -88,6 +88,12 @@ C:\Users\vagrant\Desktop\vpn-client\WindowsAmd64\VpnClientSetupAmd64.exe
 
 Manually start the `example` VPN connection.
 
+Check the created VPN virtual interface:
+
+```powershell
+Get-NetIPConfiguration -InterfaceAlias Example
+```
+
 Check the routing table:
 
 ```powershell
@@ -100,6 +106,17 @@ Start an SSH connection to the ubuntu virtual machine:
 ```powershell
 putty "rgl@$(Get-Content -Raw C:\vagrant\shared\ubuntu_ip_address.txt)"
 ```
+
+Start an RDP connection to the windows virtual machine:
+
+```powershell
+mstsc `
+    "/v:$((Get-Content -Raw C:\vagrant\shared\windows_ip_address.txt).Trim())" `
+    /w:800 `
+    /h:600
+```
+
+**NB** The default username is `rgl` and password is `HeyH0Password`.
 
 # Reference
 
